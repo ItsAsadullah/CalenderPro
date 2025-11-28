@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>তারিখ কনভার্টার</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #009e60; --primary-bg: #e8f5e9; --sec-text: #d35400; --bg: #f4f7f6; --text: #2d3436;
+        }
+        body.theme-en { --primary: #009e60; --primary-bg: #e8f5e9; --sec-text: #d35400; }
+        body.theme-bn { --primary: #c0392b; --primary-bg: #fadbd8; --sec-text: #009e60; }
+        body.theme-hj { --primary: #d35400; --primary-bg: #fce6c9; --sec-text: #009e60; }
+
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; min-height: 100vh; user-select: none; transition: 0.3s; }
+        .container { width: 100%; max-width: 450px; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+
+        .top-bar { background: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 99; transition: 0.3s; }
+        .back-btn { color: white; font-size: 18px; text-decoration: none; display: flex; align-items: center; }
+        .app-title { font-size: 18px; font-weight: 700; margin: 0; }
+        .reset-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .reset-btn:active { transform: rotate(-180deg); }
+
+        .mode-tabs { display: flex; background: #fff; border-bottom: 1px solid #eee; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; font-family: inherit; font-weight: 600; color: #888; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        .picker-area { padding: 20px 10px; background: #fcfcfc; border-bottom: 1px solid #eee; }
+        .p-row { display: flex; gap: 10px; height: 140px; }
+        
+        /* Fixed Swipe Box (Buttons inside border) */
+        .swipe-box { 
+            flex: 1; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid #eee; /* Normal border */
+            transition: 0.2s; 
+            position: relative;
+            overflow: hidden; /* Clips buttons inside */
+        }
+
+        .swipe-box.active { 
+            background: var(--primary-bg); 
+            border-color: var(--primary); /* Updates border color properly */
+        }
+
+        .arr-btn { 
+            width: 100%; 
+            padding: 8px 0; 
+            text-align: center; 
+            color: #ccc; 
+            cursor: pointer; 
+            z-index: 10; 
+            background: rgba(255,255,255,0.6); 
+            border: none;
+            /* Remove border radius to stick to container edges */
+            margin: 0;
+        }
+        
+        .arr-btn:hover { background: rgba(0,0,0,0.05); color: var(--primary); }
+        .arr-btn:active { background: var(--primary); color: white; }
+
+        .val-disp { font-size: 22px; font-weight: 700; color: var(--text); z-index: 1; pointer-events: none; }
+        .edit-overlay { position: absolute; width: 100%; height: 60%; top: 20%; opacity: 0; z-index: 5; cursor: pointer; }
+        #yearInp { display: none; width: 80%; font-size: 20px; text-align: center; border: 2px solid var(--primary); border-radius: 6px; z-index: 20; }
+
+        .res-sec { padding: 30px 20px; text-align: center; }
+        .main-date { font-size: 32px; font-weight: 700; color: var(--primary); line-height: 1.2; margin-bottom: 5px; }
+        .sec-date { font-size: 26px; font-weight: 700; color: var(--sec-text); line-height: 1.2; }
+        .meta { font-size: 13px; color: #666; background: #eee; display: inline-block; padding: 4px 12px; border-radius: 15px; margin-top: 5px; }
+        
+        .rashi-sec { margin-top: 20px; }
+        .rashi-btn { background: transparent; border: 2px solid var(--primary); color: var(--primary); padding: 8px 25px; border-radius: 30px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .rashi-btn:hover { background: var(--primary); color: white; }
+        .rashi-card { display: none; background: #f3e5f5; border: 1px solid #e1bee7; padding: 20px; border-radius: 16px; margin-top: 15px; animation: fadeIn 0.4s; }
+        .rashi-txt { color: #8e44ad; font-size: 20px; font-weight: 700; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body class="theme-en">
+
+<div class="container">
+    <div class="top-bar">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+            <span class="app-title">তারিখ কনভার্টার</span>
+        </div>
+        <button class="reset-btn" onclick="reset()" title="রিসেট"><i class="fas fa-sync-alt"></i></button>
+    </div>
+
+    <div class="mode-tabs">
+        <button class="tab-btn active" onclick="setMode('EN')" id="tEN">ইংরেজি</button>
+        <button class="tab-btn" onclick="setMode('BN')" id="tBN">বাংলা</button>
+        <button class="tab-btn" onclick="setMode('HJ')" id="tHJ">আরবি</button>
+    </div>
+
+    <div class="picker-area">
+        <div style="display:flex; justify-content:space-between; padding:0 10px 8px; color:#888; font-size:12px; font-weight:600;"><span>দিন</span><span>মাস</span><span>সাল</span></div>
+        <div class="p-row">
+            <div class="swipe-box" id="boxD">
+                <div class="arr-btn" onclick="upd(1,'d')">▲</div>
+                <div style="flex:1; display:flex; align-items:center; justify-content:center; width:100%; position:relative;">
+                    <div class="val-disp" id="txtD">01</div>
+                    <select class="edit-overlay" id="selD" onchange="manual(this.value,'d')"></select>
+                </div>
+                <div class="arr-btn" onclick="upd(-1,'d')">▼</div>
+            </div>
+            <div class="swipe-box" id="boxM">
+                <div class="arr-btn" onclick="upd(1,'m')">▲</div>
+                <div style="flex:1; display:flex; align-items:center; justify-content:center; width:100%; position:relative;">
+                    <div class="val-disp" style="font-size:18px;" id="txtM">Jan</div>
+                    <select class="edit-overlay" id="selM" onchange="manual(this.value,'m')"></select>
+                </div>
+                <div class="arr-btn" onclick="upd(-1,'m')">▼</div>
+            </div>
+            <div class="swipe-box" id="boxY">
+                <div class="arr-btn" onclick="upd(1,'y')">▲</div>
+                <div style="flex:1; display:flex; align-items:center; justify-content:center; width:100%; position:relative;" onclick="editY()">
+                    <div class="val-disp" id="txtY">2025</div>
+                    <input type="number" id="yearInp" onblur="closeY()" onkeydown="if(event.key==='Enter') closeY()">
+                </div>
+                <div class="arr-btn" onclick="upd(-1,'y')">▼</div>
+            </div>
+        </div>
+        <div style="text-align:center; font-size:10px; color:#aaa; margin-top:8px;">সোয়াইপ, ক্লিক বা টাইপ করুন</div>
+    </div>
+
+    <div class="res-sec">
+        <div style="margin-bottom:30px;">
+            <div style="font-size:12px; color:#999; margin-bottom:5px;" id="lblMain">বাংলা তারিখ</div>
+            <div class="main-date" id="resMain">...</div>
+            <div class="meta" id="resMeta">...</div>
+        </div>
+        <div style="height:1px; background:#eee; width:60%; margin:20px auto;"></div>
+        <div>
+            <div style="font-size:12px; color:#999; margin-bottom:5px;" id="lblSec">হিজরি তারিখ</div>
+            <div class="sec-date" id="resSec">...</div>
+        </div>
+
+        <div class="rashi-sec">
+            <button class="rashi-btn" id="rBtn" onclick="togRashi()">রাশিফল দেখুন</button>
+            <div class="rashi-card" id="rCard">
+                <div style="font-size:32px;" id="rIcon"></div>
+                <div class="rashi-txt" id="rText"></div>
+                <div style="font-size:11px; color:#666; margin-top:5px;">(ইংরেজি তারিখের ভিত্তিতে)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Data
+    const bDig = ["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
+    const enM = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const bnM = ["বৈশাখ","জ্যৈষ্ঠ","আষাঢ়","শ্রাবণ","ভাদ্র","আশ্বিন","কার্তিক","অগ্রহায়ণ","পৌষ","মাঘ","ফাল্গুন","চৈত্র"];
+    const hjM = ["মহররম","সফর","রবিউল আউয়াল","রবিউল সানি","জমাদিউল আউয়াল","জমাদিউল সানি","রজব","শাবান","রমজান","শাওয়াল","জিলক্বদ","জিলহজ"];
+    const days = ["রবিবার","সোমবার","মঙ্গলবার","বুধবার","বৃহস্পতিবার","শুক্রবার","শনিবার"];
+    const sea = ["গ্রীষ্ম","বর্ষা","শরৎ","হেমন্ত","শীত","বসন্ত"];
+    const zod = [{n:"মকর",i:"♑"},{n:"কুম্ভ",i:"♒"},{n:"মীন",i:"♓"},{n:"মেষ",i:"♈"},{n:"বৃষ",i:"♉"},{n:"মিথুন",i:"♊"},{n:"কর্কট",i:"♋"},{n:"সিংহ",i:"♌"},{n:"কন্যা",i:"♍"},{n:"তুলা",i:"♎"},{n:"বৃশ্চিক",i:"♏"},{n:"ধনু",i:"♐"}];
+
+    let base = new Date();
+    let mode = 'EN';
+    let rShow = false;
+
+    function toBn(n) { return n.toString().replace(/\d/g, d => bDig[d]); }
+    function isLeap(y) { return (y%4===0 && y%100!==0) || (y%400===0); }
+
+    window.onload = function() {
+        initT('boxD','d'); initT('boxM','m'); initT('boxY','y');
+        render();
+    };
+
+    function setMode(m) {
+        mode = m;
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById('t'+m).classList.add('active');
+        document.body.className = `theme-${m.toLowerCase()}`;
+        rShow=false; document.getElementById('rCard').style.display='none'; document.getElementById('rBtn').innerText='রাশিফল দেখুন';
+        render();
+    }
+
+    function reset() { base = new Date(); render(); }
+    function togRashi() {
+        let c=document.getElementById('rCard'), b=document.getElementById('rBtn');
+        rShow=!rShow; c.style.display=rShow?'block':'none'; b.innerText=rShow?'রাশিফল লুকান':'রাশিফল দেখুন';
+    }
+
+    // Bangla Calculation (Accurate)
+    function getBn(d) {
+        let y=d.getFullYear(), m=d.getMonth(), dt=d.getDate();
+        let by = (m<3 || (m===3 && dt<14)) ? y-594 : y-593;
+        let doy = Math.floor((d - new Date(y,0,1))/86400000)+1;
+        let st = isLeap(y)?105:104; 
+        let bD = [31,31,31,31,31,31,30,30,30,30,29,30]; if(isLeap(y)) bD[10]=30;
+        let bm=0, bd=0;
+        if(doy>=st) { let r=doy-st; for(let i=0;i<12;i++){ if(r<bD[i]){bm=i;bd=r+1;break;} r-=bD[i]; } }
+        else { let r=st-doy, tm=11; while(r>0){ let x=bD[tm]; if(r<=x){bm=tm;bd=(x-r)+1;break;} r-=x; tm--; } }
+        return {d:bd, m:bm, y:by};
+    }
+
+    // Hijri Calculation (Kuwaiti)
+    function getHj(d) {
+        let dt=d.getDate(), m=d.getMonth(), y=d.getFullYear();
+        let m1=m+1, y1=y; if(m1<3){y1-=1;m1+=12;}
+        let a=Math.floor(y1/100), b=2-a+Math.floor(a/4);
+        if(y1<1583)b=0; if(y1==1582 && (m1>10||(m1==10&&dt>4)))b=-10;
+        let jd=Math.floor(365.25*(y1+4716))+Math.floor(30.6001*(m1+1))+dt+b-1524;
+        let z=jd-1948084, cyc=Math.floor(z/10631); z-=10631*cyc;
+        let j=Math.floor((z-8.01/60)/10631*30), iy=30*cyc+j;
+        z-=Math.floor(j*10631/30+8.01/60); let im=Math.floor((z+28.5001)/29.5);
+        if(im==13)im=12; let id=z-Math.floor(29.5001*im-29);
+        return {d:id, m:im-1, y:iy};
+    }
+
+    // Bangla to English (Reverse Calc)
+    function bnToEn(bd, bm, by) {
+        let gy = by + 593;
+        // Check if before April 14 or after
+        // Start date of Bangla Year: April 14 (Approx)
+        let gDate = new Date(gy, 3, 14); // April 14
+        
+        // Add days for months
+        let bD = [31,31,31,31,31,31,30,30,30,30,29,30]; 
+        // Leap year check for the Gregorian year spanning Falgun
+        // Falgun falls in Feb/March of (gy+1)
+        if(isLeap(gy+1)) bD[10]=30;
+
+        for(let i=0; i<bm; i++) {
+            gDate.setDate(gDate.getDate() + bD[i]);
+        }
+        gDate.setDate(gDate.getDate() + (bd - 1));
+        return gDate;
+    }
+
+    // Hijri to English (Iterative Approximation)
+    function hjToEn(hd, hm, hy) {
+        // Approximate start: Hijri year * 354.36 days + epoch
+        // Epoch 1948440 JD approx
+        // Simpler: Just loop from estimated gregorian year
+        let estGY = Math.floor(hy * 0.97) + 622;
+        let tempDate = new Date(estGY, 0, 1);
+        // Find matching year first
+        let safety = 0;
+        while(safety < 1000) {
+            let h = getHj(tempDate);
+            if(h.y === hy && h.m === hm && h.d === hd) return tempDate;
+            
+            // Adjust
+            if(h.y < hy) tempDate.setFullYear(tempDate.getFullYear() + 1);
+            else if(h.y > hy) tempDate.setFullYear(tempDate.getFullYear() - 1);
+            else {
+                // Same year, check month/day
+                let diff = (hm * 30 + hd) - (h.m * 30 + h.d);
+                tempDate.setDate(tempDate.getDate() + diff);
+                // Fine tune
+                let h2 = getHj(tempDate);
+                if(h2.d !== hd) tempDate.setDate(tempDate.getDate() + (hd - h2.d));
+                return tempDate;
+            }
+            safety++;
+        }
+        return new Date(); // Fallback
+    }
+
+    function render() {
+        let d=base.getDate(), m=base.getMonth(), y=base.getFullYear();
+        let enMName = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
+        
+        let arr; if(mode==='EN')arr=enM; else if(mode==='BN')arr=bnM; else arr=hjM;
+        
+        let dispD=d, dispM=enM[m], dispY=y;
+        if(mode==='BN') { let b=getBn(base); dispD=b.d; dispM=bnM[b.m]; dispY=b.y; }
+        else if(mode==='HJ') { let h=getHj(base); dispD=h.d; dispM=hjM[h.m]; dispY=h.y; }
+
+        document.getElementById('txtD').innerText = toBn(dispD<10?'0'+dispD:dispD);
+        document.getElementById('txtM').innerText = dispM;
+        document.getElementById('txtY').innerText = toBn(dispY);
+
+        let ds = document.getElementById('selD'); ds.innerHTML="";
+        // Max days logic
+        let maxDays = 31;
+        if(mode === 'EN') maxDays = new Date(y, m+1, 0).getDate();
+        if(mode === 'BN') maxDays = (getBn(base).m < 6) ? 31 : 30; // Approx
+        if(mode === 'HJ') maxDays = 30; 
+
+        for(let i=1; i<=maxDays; i++) { let o=document.createElement('option'); o.value=i; o.text=toBn(i); ds.appendChild(o); }
+        ds.value = dispD;
+        
+        let ms = document.getElementById('selM'); ms.innerHTML="";
+        arr.forEach((n,i)=>{ let o=document.createElement('option'); o.value=i; o.text=n; ms.appendChild(o); });
+        ms.value = (mode==='EN'?m : (mode==='BN'?getBn(base).m : getHj(base).m));
+
+        let bn=getBn(base), hj=getHj(base);
+        let dn=days[base.getDay()], s=sea[Math.floor(bn.m/2)];
+
+        if(mode==='EN') updR('বাংলা তারিখ', `${toBn(bn.d)} ${bnM[bn.m]}, ${toBn(bn.y)}`, `${dn} | ${s} কাল`, 'হিজরি তারিখ', `${toBn(hj.d)} ${hjM[hj.m]}, ${toBn(hj.y)}`);
+        else if(mode==='BN') updR('ইংরেজি তারিখ', `${toBn(d)} ${enMName[m]}, ${toBn(y)}`, `${dn}`, 'হিজরি তারিখ', `${toBn(hj.d)} ${hjM[hj.m]}, ${toBn(hj.y)}`);
+        else updR('ইংরেজি তারিখ', `${toBn(d)} ${enMName[m]}, ${toBn(y)}`, `${dn}`, 'বাংলা তারিখ', `${toBn(bn.d)} ${bnM[bn.m]}, ${toBn(bn.y)}`);
+
+        let z = m; if(d >= [20,19,21,20,21,21,23,23,23,23,22,22][m]) z = (m+1)%12;
+        document.getElementById('rIcon').innerText = zod[z].i;
+        document.getElementById('rText').innerText = zod[z].n;
+    }
+
+    function updR(l1, v1, vm, l2, v2) {
+        document.getElementById('lblMain').innerText=l1; document.getElementById('resMain').innerText=v1;
+        document.getElementById('resMeta').innerText=vm; document.getElementById('lblSec').innerText=l2;
+        document.getElementById('resSec').innerText=v2;
+    }
+
+    // --- SMART UPDATE LOGIC (TARGET LOCK) ---
+    function upd(v, t) {
+        if(v===0) return;
+
+        if(mode==='EN') {
+            // Standard EN Logic
+            if(t==='m') {
+                let nm=base.getMonth()+v;
+                if(nm<0 || nm>11) return;
+                let d=base.getDate(); base.setMonth(nm);
+                if(base.getDate()!=d) base.setDate(0);
+            } else if(t==='d') {
+                let nd=base.getDate()+v;
+                let max=new Date(base.getFullYear(), base.getMonth()+1, 0).getDate();
+                if(nd<1 || nd>max) return;
+                base.setDate(nd);
+            } else {
+                let ny=base.getFullYear()+v; if(ny<1||ny>9999)return;
+                base.setFullYear(ny);
+            }
+        } 
+        else if(mode==='BN') {
+            // BN Logic: Get current BN parts -> Modify -> Convert back
+            let b = getBn(base);
+            let td = b.d, tm = b.m, ty = b.y;
+
+            if(t==='d') {
+                td += v;
+                // Basic clamp (refined later by reverse check)
+                if(td < 1) td = 1; 
+                if(td > 31) td = 31;
+            }
+            if(t==='m') {
+                tm += v;
+                if(tm < 0 || tm > 11) return; // Stop loop
+                // Check max days in new month
+                let maxD = (tm < 6) ? 31 : 30; // Approx logic sufficient for interaction
+                if(td > maxD) td = maxD;
+            }
+            if(t==='y') {
+                ty += v;
+                if(ty < 1) return;
+            }
+
+            base = bnToEn(td, tm, ty);
+        }
+        else {
+            // HJ Logic: Modify Hijri parts -> Convert back
+            let h = getHj(base);
+            let td = h.d, tm = h.m, ty = h.y;
+
+            if(t==='d') {
+                td += v;
+                if(td < 1) td = 1;
+                if(td > 30) td = 30; 
+            }
+            if(t==='m') {
+                tm += v;
+                if(tm < 0 || tm > 11) return;
+                if(td > 29) td = 29; // Safe clamp
+            }
+            if(t==='y') ty += v;
+
+            base = hjToEn(td, tm, ty);
+        }
+        render();
+    }
+
+    function manual(v,t) {
+        // For simplicity in manual dropdowns, we calculate difference
+        // This is safer than direct set for non-EN modes
+        let cur; 
+        if(mode==='EN') cur = (t==='d'?base.getDate():base.getMonth());
+        else if(mode==='BN') { let b=getBn(base); cur=(t==='d'?b.d:b.m); }
+        else { let h=getHj(base); cur=(t==='d'?h.d:h.m); }
+        upd(parseInt(v)-cur, t);
+    }
+
+    function editY() {
+        let i=document.getElementById('yearInp'), t=document.getElementById('txtY');
+        t.style.display='none'; i.style.display='block';
+        let y; if(mode==='EN')y=base.getFullYear(); else if(mode==='BN')y=getBn(base).y; else y=getHj(base).y;
+        i.value=y; i.focus();
+    }
+    function closeY() {
+        let i=document.getElementById('yearInp'), v=parseInt(i.value);
+        let cy; if(mode==='EN')cy=base.getFullYear(); else if(mode==='BN')cy=getBn(base).y; else cy=getHj(base).y;
+        if(!isNaN(v)) upd(v-cy, 'y');
+        i.style.display='none'; document.getElementById('txtY').style.display='block';
+    }
+
+    function initT(id, type) {
+        let el=document.getElementById(id), sy=0, acc=0, lastT=0;
+        el.addEventListener('touchstart',e=>{ if(e.target.tagName!=='INPUT') {sy=e.touches[0].clientY;acc=0;el.classList.add('active');render();} }, {passive:false});
+        el.addEventListener('touchmove',e=>{
+            if(e.target.tagName!=='INPUT'){
+                if(e.cancelable)e.preventDefault(); 
+                let cy=e.touches[0].clientY; acc+=sy-cy; sy=cy;
+                if(Math.abs(acc)>25) { upd(acc>0?1:-1, type); acc=0; }
+            }
+        }, {passive:false});
+        el.addEventListener('touchend',e=>{el.classList.remove('active');render();});
+        el.addEventListener('wheel',e=>{
+            e.preventDefault();
+            let now = Date.now();
+            if(now - lastT > 50) { upd(e.deltaY>0?-1:1, type); lastT = now; }
+        });
+    }
+</script>
+</body>
+</html>

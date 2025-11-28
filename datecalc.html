@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>দিন গণনা</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
+        
+        body { font-family: 'Hind Siliguri', sans-serif; background: #f4f7f6; margin: 0; display: flex; justify-content: center; min-height: 100vh; user-select: none; }
+        .container { width: 100%; max-width: 450px; background: #fff; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .top-bar { background: #009e60; padding: 12px 15px; display: flex; align-items: center; color: white; }
+        .back-btn { color: white; font-size: 18px; margin-right: 15px; text-decoration: none; }
+        .title { font-size: 18px; font-weight: 700; }
+
+        .content { padding: 10px 15px; flex-grow: 1; display:flex; flex-direction:column; }
+
+        .section-label { font-size: 12px; font-weight: 700; color: #666; margin: 5px 0; text-transform: uppercase; text-align:center; }
+
+        /* Compact Pickers */
+        .picker-row { display: flex; gap: 6px; height: 80px; margin-bottom: 5px; } /* Height Reduced */
+        
+        .swipe-box { 
+            flex: 1; background: white; border-radius: 8px; 
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center; 
+            border: 1px solid #ddd; position: relative; overflow: hidden; 
+        }
+        .swipe-box.active { border-color: #009e60; background: #e8f5e9; }
+        
+        .arr-btn { width: 100%; padding: 2px; text-align: center; color: #999; cursor: pointer; z-index: 10; background: rgba(255,255,255,0.9); font-size: 10px; border:none; }
+        .arr-btn:active { color: #009e60; background: #ddd; }
+        
+        .val-wrapper { flex:1; display:flex; align-items:center; justify-content:center; width:100%; position:relative; }
+        
+        /* FONT FIX: Increased Size & Weight */
+        .val-disp { font-size: 22px; font-weight: 700; color: #2d3436; pointer-events: none; }
+        
+        .edit-overlay { position: absolute; width: 100%; height: 100%; top: 0; opacity: 0; z-index: 5; cursor: pointer; }
+        .year-input { display: none; width: 90%; font-size: 20px; font-weight: 700; text-align: center; border: 2px solid #009e60; border-radius: 4px; z-index: 20; font-family: inherit; }
+
+        .radios { display: flex; justify-content: center; gap: 20px; margin: 10px 0; }
+        .rad-lbl { font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 15px; color: #444; }
+        input[type="radio"] { accent-color: #009e60; transform: scale(1.2); }
+
+        /* Sticky Result Box */
+        .res-container { margin-top: auto; background: #fff; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); }
+        .res-header { background: #009e60; color: white; padding: 6px; text-align: center; font-size: 13px; font-weight: 700; border-radius: 12px 12px 0 0; }
+        .res-body { padding: 12px; text-align: center; }
+        
+        /* Result Fonts Fixed */
+        .res-main { font-size: 22px; font-weight: 700; color: #333; margin-bottom: 4px; line-height: 1.3; }
+        .res-sub { font-size: 15px; color: #d35400; font-weight: 700; }
+        .season-tag { font-size: 12px; background: #f0f0f0; color: #555; padding: 2px 8px; border-radius: 12px; display: inline-block; margin-left: 5px; font-weight: 600; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-bar">
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+        <span class="title">দিন গণনা</span>
+    </div>
+
+    <div class="content">
+        <div class="section-label">শুরুর তারিখ</div>
+        <div class="picker-row">
+            <div class="swipe-box" id="startD"><div class="arr-btn" onclick="u('start','d',1)">▲</div><div class="val-wrapper"><div class="val-disp" id="tStartD">01</div><select class="edit-overlay" id="sStartD" onchange="m('start','d',this.value)"></select></div><div class="arr-btn" onclick="u('start','d',-1)">▼</div></div>
+            <div class="swipe-box" id="startM" style="flex:1.4"><div class="arr-btn" onclick="u('start','m',1)">▲</div><div class="val-wrapper"><div class="val-disp" style="font-size:18px;" id="tStartM">Jan</div><select class="edit-overlay" id="sStartM" onchange="m('start','m',this.value)"></select></div><div class="arr-btn" onclick="u('start','m',-1)">▼</div></div>
+            <div class="swipe-box" id="startY" style="flex:1.4"><div class="arr-btn" onclick="u('start','y',1)">▲</div><div class="val-wrapper" onclick="eY('start')"><div class="val-disp" id="tStartY">2025</div><input type="number" class="year-input" id="iStartY" onblur="cY('start')" onkeydown="if(event.key==='Enter')cY('start')"></div><div class="arr-btn" onclick="u('start','y',-1)">▼</div></div>
+        </div>
+
+        <div class="section-label">ব্যবধান (Duration)</div>
+        <div class="picker-row">
+            <div class="swipe-box" id="cntY">
+                <div class="arr-btn" onclick="uCnt('y',1)">▲</div>
+                <div class="val-wrapper" onclick="eCnt('y')"><div class="val-disp" id="tCntY">0</div><input type="number" class="year-input" id="iCntY" onblur="cCnt('y')" onkeydown="if(event.key==='Enter')cCnt('y')"></div>
+                <div class="arr-btn" onclick="uCnt('y',-1)">▼</div>
+                <div style="font-size:10px; color:#888; padding-bottom:3px; font-weight:600;">বছর</div>
+            </div>
+            <div class="swipe-box" id="cntM">
+                <div class="arr-btn" onclick="uCnt('m',1)">▲</div>
+                <div class="val-wrapper"><div class="val-disp" id="tCntM">0</div><select class="edit-overlay" id="sCntM" onchange="mCnt('m',this.value)"></select></div>
+                <div class="arr-btn" onclick="uCnt('m',-1)">▼</div>
+                <div style="font-size:10px; color:#888; padding-bottom:3px; font-weight:600;">মাস</div>
+            </div>
+            <div class="swipe-box" id="cntD">
+                <div class="arr-btn" onclick="uCnt('d',1)">▲</div>
+                <div class="val-wrapper"><div class="val-disp" id="tCntD">0</div><select class="edit-overlay" id="sCntD" onchange="mCnt('d',this.value)"></select></div>
+                <div class="arr-btn" onclick="uCnt('d',-1)">▼</div>
+                <div style="font-size:10px; color:#888; padding-bottom:3px; font-weight:600;">দিন</div>
+            </div>
+        </div>
+
+        <div class="radios">
+            <label class="rad-lbl"><input type="radio" name="dir" value="after" checked onchange="calc()"> পরে</label>
+            <label class="rad-lbl"><input type="radio" name="dir" value="before" onchange="calc()"> আগে</label>
+        </div>
+
+        <div class="res-container">
+            <div class="res-header">ফলাফল তারিখ</div>
+            <div class="res-body">
+                <div class="res-main" id="resEn">...</div>
+                <div class="res-sub" id="resBn">...</div>
+                <div class="res-sub" style="color:#333; margin-top:5px; font-size:14px;" id="resHj">...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const bDig=["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
+    // English Month for Picker (Short)
+    const enMShort=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    // Bangla Month Names for Result
+    const bnMNames=["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
+    const bnM=["বৈশাখ","জ্যৈষ্ঠ","আষাঢ়","শ্রাবণ","ভাদ্র","আশ্বিন","কার্তিক","অগ্রহায়ণ","পৌষ","মাঘ","ফাল্গুন","চৈত্র"];
+    const hjM=["মহররম","সফর","রবিউল আউয়াল","রবিউল সানি","জমাদিউল আউয়াল","জমাদিউল সানি","রজব","শাবান","রমজান","শাওয়াল","জিলক্বদ","জিলহজ"];
+    const days=["রবিবার","সোমবার","মঙ্গলবার","বুধবার","বৃহস্পতিবার","শুক্রবার","শনিবার"];
+    const seasons = ["গ্রীষ্ম", "বর্ষা", "শরৎ", "হেমন্ত", "শীত", "বসন্ত"];
+
+    function toBn(n){return n.toString().replace(/\d/g,d=>bDig[d]);}
+    function isLeap(y) { return (y%4===0 && y%100!==0) || (y%400===0); }
+
+    let start = new Date();
+    let cnt = {y:0, m:0, d:0};
+
+    window.onload = function() {
+        init('start');
+        initCntDrop();
+        rend('start');
+        rendCnt();
+        calc();
+        initSwp('startD','cal'); initSwp('startM','cal'); initSwp('startY','cal');
+        initSwp('cntY','cnt'); initSwp('cntM','cnt'); initSwp('cntD','cnt');
+    }
+
+    // --- DATE PICKER ---
+    function u(ctx, t, v) {
+        if(t==='d') start.setDate(start.getDate()+v);
+        if(t==='m') start.setMonth(start.getMonth()+v);
+        if(t==='y') start.setFullYear(start.getFullYear()+v);
+        rend(ctx); calc();
+    }
+    function m(ctx, t, v) {
+        if(t==='d') start.setDate(parseInt(v));
+        if(t==='m') start.setMonth(parseInt(v));
+        rend(ctx); calc();
+    }
+    function eY(ctx) {
+        document.getElementById('tStartY').style.display='none';
+        let i = document.getElementById('iStartY');
+        i.style.display='block'; i.value=start.getFullYear(); i.focus();
+    }
+    function cY(ctx) {
+        let i = document.getElementById('iStartY');
+        let v = parseInt(i.value); if(!isNaN(v)) start.setFullYear(v);
+        i.style.display='none'; document.getElementById('tStartY').style.display='block';
+        rend(ctx); calc();
+    }
+    function rend(ctx) {
+        document.getElementById('tStartD').innerText = toBn(start.getDate()<10?'0'+start.getDate():start.getDate());
+        document.getElementById('tStartM').innerText = enMShort[start.getMonth()];
+        document.getElementById('tStartY').innerText = toBn(start.getFullYear());
+        
+        let sD = document.getElementById('sStartD'); sD.innerHTML="";
+        let max = new Date(start.getFullYear(), start.getMonth()+1, 0).getDate();
+        for(let i=1; i<=max; i++) { let o=document.createElement('option'); o.value=i; o.text=toBn(i); sD.appendChild(o); }
+        sD.value = start.getDate();
+
+        let sM = document.getElementById('sStartM'); sM.innerHTML="";
+        enMShort.forEach((n,i)=>{let o=document.createElement('option'); o.value=i; o.text=n; sM.appendChild(o);});
+        sM.value = start.getMonth();
+    }
+
+    // --- COUNTER PICKER ---
+    function uCnt(t, v) {
+        cnt[t] += v; if(cnt[t]<0) cnt[t]=0;
+        rendCnt(); calc();
+    }
+    function mCnt(t, v) { cnt[t] = parseInt(v); rendCnt(); calc(); }
+    function eCnt(t) {
+        if(t!=='y') return;
+        document.getElementById('tCntY').style.display='none';
+        let i=document.getElementById('iCntY'); i.style.display='block'; i.value=cnt.y; i.focus();
+    }
+    function cCnt(t) {
+        let i=document.getElementById('iCntY'); cnt.y = parseInt(i.value)||0;
+        i.style.display='none'; document.getElementById('tCntY').style.display='block'; rendCnt(); calc();
+    }
+    function rendCnt() {
+        document.getElementById('tCntY').innerText = toBn(cnt.y);
+        document.getElementById('tCntM').innerText = toBn(cnt.m);
+        document.getElementById('tCntD').innerText = toBn(cnt.d);
+        document.getElementById('sCntM').value = cnt.m;
+        document.getElementById('sCntD').value = cnt.d;
+    }
+    function initCntDrop() {
+        let sM = document.getElementById('sCntM'); for(let i=0;i<=50;i++){let o=document.createElement('option'); o.value=i; o.text=toBn(i); sM.appendChild(o);}
+        let sD = document.getElementById('sCntD'); for(let i=0;i<=100;i++){let o=document.createElement('option'); o.value=i; o.text=toBn(i); sD.appendChild(o);}
+    }
+
+    // --- CALCULATION ---
+    function calc() {
+        let isAfter = document.querySelector('input[name="dir"]:checked').value === 'after';
+        let t = new Date(start);
+        let fac = isAfter ? 1 : -1;
+        
+        t.setFullYear(t.getFullYear() + (cnt.y*fac));
+        t.setMonth(t.getMonth() + (cnt.m*fac));
+        t.setDate(t.getDate() + (cnt.d*fac));
+        
+        // English & Season
+        let dayName = days[t.getDay()];
+        let b = getBn(t);
+        let h = getHj(t);
+        let s = getSeason(b.m);
+
+        let enStr = `${toBn(t.getDate())} ${bnMNames[t.getMonth()]}, ${toBn(t.getFullYear())} (${dayName}) <span class="season-tag">${s} কাল</span>`;
+        document.getElementById('resEn').innerHTML = enStr;
+
+        document.getElementById('resBn').innerText = `বাংলা: ${toBn(b.d)} ${bnM[b.m]}, ${toBn(b.y)}`;
+        document.getElementById('resHj').innerText = `হিজরি: ${toBn(h.d)} ${hjM[h.m]}, ${toBn(h.y)}`;
+    }
+
+    // --- HELPERS (Approx) ---
+    function getBn(d) {
+        let y=d.getFullYear(), m=d.getMonth(), dt=d.getDate();
+        let by = (m<3 || (m===3 && dt<14)) ? y-594 : y-593;
+        let bm=(m+8)%12;
+        return {d:dt, m:bm, y:by};
+    }
+    function getHj(d) {
+        return {d:d.getDate(), m:d.getMonth(), y:d.getFullYear()-579}; 
+    }
+    function getSeason(mIndex) { return seasons[Math.floor(mIndex / 2)]; }
+
+    function init(p) {
+        // Just for structure
+    }
+    function initSwp(id, ctx) {
+        let el=document.getElementById(id), sy=0, acc=0;
+        el.addEventListener('touchstart',e=>{if(e.target.tagName!=='INPUT'){sy=e.touches[0].clientY;acc=0;}},{passive:false});
+        el.addEventListener('touchmove',e=>{
+            if(e.target.tagName!=='INPUT'){
+                if(e.cancelable)e.preventDefault(); let cy=e.touches[0].clientY; acc+=sy-cy; sy=cy;
+                if(Math.abs(acc)>20) { 
+                    let dir = acc>0?1:-1;
+                    if(ctx==='cal') {
+                        if(id.includes('D')) u('start','d',dir);
+                        if(id.includes('M')) u('start','m',dir);
+                        if(id.includes('Y')) u('start','y',dir);
+                    } else {
+                        let type = id.replace('cnt','').toLowerCase();
+                        uCnt(type, dir);
+                    }
+                    acc=0; 
+                }
+            }
+        },{passive:false});
+    }
+</script>
+</body>
+</html>

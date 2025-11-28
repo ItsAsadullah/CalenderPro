@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>বয়স ম্যানেজার</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
+        
+        :root { --primary: #009e60; --bg: #f4f7f6; --text: #2d3436; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; min-height: 100vh; user-select: none; }
+        .container { width: 100%; max-width: 450px; background: #fff; min-height: 100vh; display: flex; flex-direction: column; }
+
+        .top-bar { background: var(--primary); padding: 12px 15px; display: flex; align-items: center; color: white; position: sticky; top: 0; z-index: 99; }
+        .back-btn { color: white; font-size: 18px; margin-right: 15px; text-decoration: none; }
+        .title { font-size: 18px; font-weight: 700; }
+
+        .main-tabs { display: flex; background: #fff; padding: 5px 10px; border-bottom: 1px solid #eee; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; font-family: inherit; font-weight: 600; color: #888; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        .content { padding: 15px; flex-grow: 1; overflow-y: auto; padding-bottom: 50px; }
+        .view { display: none; }
+        .view.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+        .section-label { font-size: 12px; font-weight: 700; color: #666; margin: 15px 0 5px; text-transform: uppercase; text-align: center; border-bottom: 1px dashed #ddd; padding-bottom: 5px; }
+        
+        /* Picker Styles */
+        .picker-row { display: flex; gap: 6px; height: 90px; margin-bottom: 5px; }
+        .swipe-box { flex: 1; background: white; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; border: 1px solid #ddd; position: relative; overflow: hidden; }
+        .swipe-box.active { border-color: var(--primary); background: #e8f5e9; }
+        
+        .arr-btn { width: 100%; padding: 2px; text-align: center; color: #999; cursor: pointer; z-index: 10; background: rgba(255,255,255,0.8); font-size: 10px; }
+        .arr-btn:active { color: var(--primary); background: #ddd; }
+        
+        /* Font Fix: Thicker weight & Larger Size */
+        .val-wrapper { flex:1; display:flex; align-items:center; justify-content:center; width:100%; position:relative; }
+        .val-disp { font-size: 22px; font-weight: 700; color: #2d3436; pointer-events: none; } 
+        
+        .edit-overlay { position: absolute; width: 100%; height: 100%; top: 0; opacity: 0; z-index: 5; cursor: pointer; }
+        .year-input { display: none; width: 90%; font-size: 20px; font-weight: 700; text-align: center; border: 1px solid var(--primary); border-radius: 4px; z-index: 20; font-family: 'Hind Siliguri', sans-serif; color: #2d3436; }
+
+        .action-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 15px; margin-bottom: 15px; display: none; }
+        
+        /* RESULT BOX STYLES - Updated Font Weights */
+        .res-container { margin-top: 20px; background: #fff; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); overflow: hidden; }
+        .res-header { background: var(--primary); color: white; padding: 10px; text-align: center; font-size: 14px; font-weight: 600; }
+        .res-main { padding: 15px; text-align: center; border-bottom: 1px dashed #eee; }
+        
+        .age-main-text { font-size: 24px; font-weight: 700; color: #333; line-height: 1.3; }
+        .dob-main-date { font-size: 22px; font-weight: 700; color: #009e60; margin-bottom: 5px; }
+        
+        /* Updated Secondary Date Style */
+        .dob-sub-date { 
+            font-size: 16px; /* Increased size */
+            color: #d35400; 
+            margin-top: 5px; 
+            font-weight: 700; /* Bold 700 ensures '1' is visible */
+        }
+        
+        .season-tag { font-size: 13px; background: #f0f0f0; color: #555; padding: 2px 8px; border-radius: 12px; display: inline-block; margin-left: 5px; font-weight: 600; }
+        
+        /* Grid for stats */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #eee; }
+        .stat-box { background: white; padding: 10px; text-align: center; }
+        .stat-val { font-size: 18px; font-weight: 700; color: #555; }
+        .stat-lbl { font-size: 12px; color: #999; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-bar">
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+        <span class="title">বয়স ম্যানেজার</span>
+    </div>
+
+    <div class="main-tabs">
+        <button class="tab-btn active" onclick="sw('calc')" id="t-calc">বয়স বের করুন</button>
+        <button class="tab-btn" onclick="sw('find')" id="t-find">জন্মতারিখ বের করুন</button>
+    </div>
+
+    <div class="content">
+        <div id="v-calc" class="view active">
+            <div class="section-label">জন্ম তারিখ</div>
+            <div class="picker-row">
+                <div class="swipe-box" id="dobD"><div class="arr-btn" onclick="u('dob','d',1)">▲</div><div class="val-wrapper"><div class="val-disp" id="tDobD">01</div><select class="edit-overlay" id="sDobD" onchange="m('dob','d',this.value)"></select></div><div class="arr-btn" onclick="u('dob','d',-1)">▼</div></div>
+                <div class="swipe-box" id="dobM" style="flex:1.4"><div class="arr-btn" onclick="u('dob','m',1)">▲</div><div class="val-wrapper"><div class="val-disp" style="font-size:18px;" id="tDobM">Jan</div><select class="edit-overlay" id="sDobM" onchange="m('dob','m',this.value)"></select></div><div class="arr-btn" onclick="u('dob','m',-1)">▼</div></div>
+                <div class="swipe-box" id="dobY" style="flex:1.4"><div class="arr-btn" onclick="u('dob','y',1)">▲</div><div class="val-wrapper" onclick="eY('dob')"><div class="val-disp" id="tDobY">2000</div><input type="number" class="year-input" id="iDobY" onblur="cY('dob')" onkeydown="if(event.key==='Enter')cY('dob')"></div><div class="arr-btn" onclick="u('dob','y',-1)">▼</div></div>
+            </div>
+
+            <div class="section-label">আজকের তারিখ</div>
+            <div class="picker-row">
+                <div class="swipe-box" id="refD"><div class="arr-btn" onclick="u('ref','d',1)">▲</div><div class="val-wrapper"><div class="val-disp" id="tRefD">01</div><select class="edit-overlay" id="sRefD" onchange="m('ref','d',this.value)"></select></div><div class="arr-btn" onclick="u('ref','d',-1)">▼</div></div>
+                <div class="swipe-box" id="refM" style="flex:1.4"><div class="arr-btn" onclick="u('ref','m',1)">▲</div><div class="val-wrapper"><div class="val-disp" style="font-size:18px;" id="tRefM">Jan</div><select class="edit-overlay" id="sRefM" onchange="m('ref','m',this.value)"></select></div><div class="arr-btn" onclick="u('ref','m',-1)">▼</div></div>
+                <div class="swipe-box" id="refY" style="flex:1.4"><div class="arr-btn" onclick="u('ref','y',1)">▲</div><div class="val-wrapper" onclick="eY('ref')"><div class="val-disp" id="tRefY">2025</div><input type="number" class="year-input" id="iRefY" onblur="cY('ref')" onkeydown="if(event.key==='Enter')cY('ref')"></div><div class="arr-btn" onclick="u('ref','y',-1)">▼</div></div>
+            </div>
+
+            <div class="res-container">
+                <div class="res-header">আপনার বর্তমান বয়স</div>
+                <div class="res-main">
+                    <div class="age-main-text" id="outAgeMain">...</div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-box"><div class="stat-val" id="stMo">0</div><div class="stat-lbl">মোট মাস</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stWk">0</div><div class="stat-lbl">মোট সপ্তাহ</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stDy">0</div><div class="stat-lbl">মোট দিন</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stHr">0</div><div class="stat-lbl">মোট ঘণ্টা</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stMn">0</div><div class="stat-lbl">মোট মিনিট</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stSc">0</div><div class="stat-lbl">মোট সেকেন্ড</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="v-find" class="view">
+            <div class="section-label">হিসাবের তারিখ</div>
+            <div class="picker-row">
+                <div class="swipe-box" id="revD"><div class="arr-btn" onclick="u('rev','d',1)">▲</div><div class="val-wrapper"><div class="val-disp" id="tRevD">01</div><select class="edit-overlay" id="sRevD" onchange="m('rev','d',this.value)"></select></div><div class="arr-btn" onclick="u('rev','d',-1)">▼</div></div>
+                <div class="swipe-box" id="revM" style="flex:1.4"><div class="arr-btn" onclick="u('rev','m',1)">▲</div><div class="val-wrapper"><div class="val-disp" style="font-size:18px;" id="tRevM">Jan</div><select class="edit-overlay" id="sRevM" onchange="m('rev','m',this.value)"></select></div><div class="arr-btn" onclick="u('rev','m',-1)">▼</div></div>
+                <div class="swipe-box" id="revY" style="flex:1.4"><div class="arr-btn" onclick="u('rev','y',1)">▲</div><div class="val-wrapper" onclick="eY('rev')"><div class="val-disp" id="tRevY">2025</div><input type="number" class="year-input" id="iRevY" onblur="cY('rev')" onkeydown="if(event.key==='Enter')cY('rev')"></div><div class="arr-btn" onclick="u('rev','y',-1)">▼</div></div>
+            </div>
+
+            <div class="section-label">বয়স কত?</div>
+            <div class="picker-row">
+                <div class="swipe-box" id="cntY">
+                    <div class="arr-btn" onclick="uCnt('y',1)">▲</div>
+                    <div class="val-wrapper" onclick="eCnt('y')"><div class="val-disp" id="tCntY">0</div><input type="number" class="year-input" id="iCntY" onblur="cCnt('y')" onkeydown="if(event.key==='Enter')cCnt('y')"></div>
+                    <div class="arr-btn" onclick="uCnt('y',-1)">▼</div>
+                    <div style="font-size:10px; padding-bottom:4px; color:#888; font-weight:600;">বছর</div>
+                </div>
+                <div class="swipe-box" id="cntM">
+                    <div class="arr-btn" onclick="uCnt('m',1)">▲</div>
+                    <div class="val-wrapper"><div class="val-disp" id="tCntM">0</div><select class="edit-overlay" id="sCntM" onchange="mCnt('m',this.value)"></select></div>
+                    <div class="arr-btn" onclick="uCnt('m',-1)">▼</div>
+                    <div style="font-size:10px; padding-bottom:4px; color:#888; font-weight:600;">মাস</div>
+                </div>
+                <div class="swipe-box" id="cntD">
+                    <div class="arr-btn" onclick="uCnt('d',1)">▲</div>
+                    <div class="val-wrapper"><div class="val-disp" id="tCntD">0</div><select class="edit-overlay" id="sCntD" onchange="mCnt('d',this.value)"></select></div>
+                    <div class="arr-btn" onclick="uCnt('d',-1)">▼</div>
+                    <div style="font-size:10px; padding-bottom:4px; color:#888; font-weight:600;">দিন</div>
+                </div>
+            </div>
+
+            <div class="res-container">
+                <div class="res-header">সম্ভাব্য জন্ম তারিখ</div>
+                <div class="res-main">
+                    <div class="dob-main-date" id="outDobEn">...</div>
+                    <div class="dob-sub-date" id="outDobBn">...</div>
+                    <div class="dob-sub-date" style="color:#333;" id="outDobHj">...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const bDig=["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
+    const enMShort=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const bnMNames=["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
+    const bnM=["বৈশাখ","জ্যৈষ্ঠ","আষাঢ়","শ্রাবণ","ভাদ্র","আশ্বিন","কার্তিক","অগ্রহায়ণ","পৌষ","মাঘ","ফাল্গুন","চৈত্র"];
+    const hjM=["মহররম","সফর","রবিউল আউয়াল","রবিউল সানি","জমাদিউল আউয়াল","জমাদিউল সানি","রজব","শাবান","রমজান","শাওয়াল","জিলক্বদ","জিলহজ"];
+    const days=["রবিবার","সোমবার","মঙ্গলবার","বুধবার","বৃহস্পতিবার","শুক্রবার","শনিবার"];
+    const seasons = ["গ্রীষ্ম", "বর্ষা", "শরৎ", "হেমন্ত", "শীত", "বসন্ত"];
+    
+    function toBn(n){return n.toString().replace(/\d/g,d=>bDig[d]);}
+    function isLeap(y) { return (y%4===0 && y%100!==0) || (y%400===0); }
+
+    let dDob = new Date(2000, 0, 1);
+    let dRef = new Date();
+    let dRev = new Date();
+    let cnt = {y:0, m:0, d:0};
+
+    window.onload = function() {
+        init('dob'); init('ref'); init('rev');
+        initCntDrop(); rendCnt();
+        initSwpCnt();
+        
+        rend('dob'); rend('ref'); rend('rev'); 
+        calcAge(); calcDob();
+    }
+
+    function sw(t) {
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById('t-'+t).classList.add('active');
+        document.querySelectorAll('.view').forEach(v=>v.style.display='none');
+        document.getElementById('v-'+t).style.display='block';
+    }
+
+    // --- SHARED DATE PICKER LOGIC ---
+    function u(ctx, t, v) {
+        let d = (ctx==='dob')?dDob:(ctx==='ref')?dRef:dRev;
+        if(t==='d') d.setDate(d.getDate()+v);
+        if(t==='m') d.setMonth(d.getMonth()+v);
+        if(t==='y') d.setFullYear(d.getFullYear()+v);
+        rend(ctx);
+        if(ctx==='rev') calcDob(); else calcAge();
+    }
+    function m(ctx, t, v) {
+        let d = (ctx==='dob')?dDob:(ctx==='ref')?dRef:dRev;
+        if(t==='d') d.setDate(parseInt(v));
+        if(t==='m') d.setMonth(parseInt(v));
+        rend(ctx);
+        if(ctx==='rev') calcDob(); else calcAge();
+    }
+    function eY(ctx) {
+        let n = ctx.charAt(0).toUpperCase()+ctx.slice(1);
+        document.getElementById('t'+n+'Y').style.display='none';
+        let i = document.getElementById('i'+n+'Y');
+        i.style.display='block'; i.value=(ctx==='dob'?dDob:ctx==='ref'?dRef:dRev).getFullYear(); i.focus();
+    }
+    function cY(ctx) {
+        let n = ctx.charAt(0).toUpperCase()+ctx.slice(1);
+        let i = document.getElementById('i'+n+'Y');
+        let d = (ctx==='dob'?dDob:ctx==='ref'?dRef:dRev);
+        let v = parseInt(i.value); if(!isNaN(v)) d.setFullYear(v);
+        i.style.display='none'; document.getElementById('t'+n+'Y').style.display='block';
+        rend(ctx);
+        if(ctx==='rev') calcDob(); else calcAge();
+    }
+    function rend(ctx) {
+        let d = (ctx==='dob')?dDob:(ctx==='ref')?dRef:dRev;
+        let p = ctx.charAt(0).toUpperCase()+ctx.slice(1);
+        document.getElementById('t'+p+'D').innerText = toBn(d.getDate()<10?'0'+d.getDate():d.getDate());
+        document.getElementById('t'+p+'M').innerText = enMShort[d.getMonth()];
+        document.getElementById('t'+p+'Y').innerText = toBn(d.getFullYear());
+        
+        // Update Selects
+        let sD = document.getElementById('s'+p+'D'); sD.innerHTML="";
+        let max = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+        for(let i=1; i<=max; i++) { let o=document.createElement('option'); o.value=i; o.text=toBn(i); sD.appendChild(o); }
+        sD.value = d.getDate();
+
+        let sM = document.getElementById('s'+p+'M'); sM.innerHTML="";
+        enMShort.forEach((n,i)=>{let o=document.createElement('option'); o.value=i; o.text=n; sM.appendChild(o);});
+        sM.value = d.getMonth();
+    }
+
+    // --- COUNTER LOGIC ---
+    function uCnt(t, v) {
+        cnt[t] += v; if(cnt[t]<0) cnt[t]=0;
+        rendCnt(); calcDob();
+    }
+    function mCnt(t, v) { cnt[t] = parseInt(v); rendCnt(); calcDob(); }
+    function eCnt(t) {
+        if(t!=='y') return;
+        document.getElementById('tCntY').style.display='none';
+        let i=document.getElementById('iCntY'); i.style.display='block'; i.value=cnt.y; i.focus();
+    }
+    function cCnt(t) {
+        let i=document.getElementById('iCntY'); cnt.y = parseInt(i.value)||0;
+        i.style.display='none'; document.getElementById('tCntY').style.display='block'; rendCnt(); calcDob();
+    }
+    function rendCnt() {
+        document.getElementById('tCntY').innerText = toBn(cnt.y);
+        document.getElementById('tCntM').innerText = toBn(cnt.m);
+        document.getElementById('tCntD').innerText = toBn(cnt.d);
+        document.getElementById('sCntM').value = cnt.m;
+        document.getElementById('sCntD').value = cnt.d;
+    }
+    function initCntDrop() {
+        let sM = document.getElementById('sCntM'); for(let i=0;i<=50;i++){let o=document.createElement('option'); o.value=i; o.text=toBn(i); sM.appendChild(o);}
+        let sD = document.getElementById('sCntD'); for(let i=0;i<=100;i++){let o=document.createElement('option'); o.value=i; o.text=toBn(i); sD.appendChild(o);}
+    }
+
+    // --- CALCULATION LOGIC ---
+    function calcAge() {
+        let d1 = new Date(dDob), d2 = new Date(dRef);
+        // Ensure d1 is older
+        if(d1 > d2) { let t=d1; d1=d2; d2=t; }
+
+        let y = d2.getFullYear() - d1.getFullYear();
+        let m = d2.getMonth() - d1.getMonth();
+        let d = d2.getDate() - d1.getDate();
+
+        if(d < 0) { m--; d += new Date(d2.getFullYear(), d2.getMonth(), 0).getDate(); }
+        if(m < 0) { y--; m += 12; }
+
+        // Total Stats
+        let diffMs = d2 - d1;
+        let totSec = Math.floor(diffMs / 1000);
+        let totMin = Math.floor(totSec / 60);
+        let totHr = Math.floor(totMin / 60);
+        let totDay = Math.floor(totHr / 24);
+        let totWk = Math.floor(totDay / 7);
+        let totMo = (y * 12) + m;
+
+        document.getElementById('outAgeMain').innerText = `${toBn(y)} বছর, ${toBn(m)} মাস, ${toBn(d)} দিন`;
+        document.getElementById('stMo').innerText = toBn(totMo);
+        document.getElementById('stWk').innerText = toBn(totWk);
+        document.getElementById('stDy').innerText = toBn(totDay);
+        document.getElementById('stHr').innerText = toBn(totHr);
+        document.getElementById('stMn').innerText = toBn(totMin);
+        document.getElementById('stSc').innerText = toBn(totSec);
+    }
+
+    function calcDob() {
+        let t = new Date(dRev);
+        t.setFullYear(t.getFullYear() - cnt.y);
+        t.setMonth(t.getMonth() - cnt.m);
+        t.setDate(t.getDate() - cnt.d);
+
+        // Bengali Date & Season
+        let b = getBn(t);
+        let h = getHj(t);
+        let s = getSeason(b.m);
+        let dayName = days[t.getDay()];
+
+        // Result
+        let enStr = `${toBn(t.getDate())} ${bnMNames[t.getMonth()]}, ${toBn(t.getFullYear())} (${dayName}) <span class="season-tag">${s} কাল</span>`;
+        document.getElementById('outDobEn').innerHTML = enStr;
+
+        document.getElementById('outDobBn').innerText = `বাংলা: ${toBn(b.d)} ${bnM[b.m]}, ${toBn(b.y)}`;
+        document.getElementById('outDobHj').innerText = `হিজরি: ${toBn(h.d)} ${hjM[h.m]}, ${toBn(h.y)}`;
+    }
+
+    // --- HELPER ALGOS ---
+    function getBn(d) {
+        let y=d.getFullYear(), m=d.getMonth(), dt=d.getDate();
+        let by = (m<3 || (m===3 && dt<14)) ? y-594 : y-593;
+        let bm=(m+8)%12; // Approx
+        return {d:dt, m:bm, y:by};
+    }
+    function getHj(d) { return {d:d.getDate(), m:d.getMonth(), y:d.getFullYear()-579}; } // Approx
+    function getSeason(mIndex) { return seasons[Math.floor(mIndex / 2)]; }
+
+    // --- SWIPE ---
+    function init(p) {
+        ['D','M','Y'].forEach(k=>{
+            let el=document.getElementById(p+k), sy=0, acc=0;
+            el.addEventListener('touchstart',e=>{if(e.target.tagName!=='INPUT'){sy=e.touches[0].clientY;acc=0;}},{passive:false});
+            el.addEventListener('touchmove',e=>{
+                if(e.target.tagName!=='INPUT'){
+                    if(e.cancelable)e.preventDefault(); let cy=e.touches[0].clientY; acc+=sy-cy; sy=cy;
+                    if(Math.abs(acc)>20){u(p, k.toLowerCase(), acc>0?1:-1); acc=0;}
+                }
+            },{passive:false});
+        });
+    }
+    function initSwpCnt() {
+        ['Y','M','D'].forEach(k=>{
+            let el=document.getElementById('cnt'+k), sy=0, acc=0;
+            el.addEventListener('touchstart',e=>{if(e.target.tagName!=='INPUT'){sy=e.touches[0].clientY;acc=0;}},{passive:false});
+            el.addEventListener('touchmove',e=>{
+                if(e.target.tagName!=='INPUT'){
+                    if(e.cancelable)e.preventDefault(); let cy=e.touches[0].clientY; acc+=sy-cy; sy=cy;
+                    if(Math.abs(acc)>20){uCnt(k.toLowerCase(), acc>0?1:-1); acc=0;}
+                }
+            },{passive:false});
+        });
+    }
+</script>
+</body>
+</html>

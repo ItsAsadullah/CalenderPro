@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>রেডিয়াস টুলস - হোম</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: #ffffff;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #009e60;
+            padding: 25px 20px;
+            color: white;
+            text-align: center;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0, 158, 96, 0.2);
+        }
+
+        .header h2 { margin: 0; font-size: 24px; font-weight: 700; }
+        .header p { margin: 5px 0 0; opacity: 0.9; font-size: 14px; }
+
+        .menu-grid {
+            padding: 25px;
+            display: grid;
+            gap: 15px;
+        }
+
+        .menu-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 16px;
+            padding: 20px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .menu-card:active {
+            transform: scale(0.98);
+            background: #f9f9f9;
+        }
+
+        .icon-box {
+            width: 55px;
+            height: 55px;
+            background: #e8f5e9;
+            color: #009e60;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .text-box h3 { margin: 0; font-size: 18px; color: #2d3436; font-weight: 700; }
+        .text-box p { margin: 4px 0 0; font-size: 13px; color: #888; }
+
+        .footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>রেডিয়াস টুলস</h2>
+        <p>স্মার্ট ক্যালকুলেশন সলিউশন</p>
+    </div>
+
+    <div class="menu-grid">
+        <a href="calendar.html" class="menu-card">
+            <div class="icon-box"><i class="fas fa-calendar-alt"></i></div>
+            <div class="text-box">
+                <h3>তারিখ কনভার্টার</h3>
+                <p>ইংরেজি, বাংলা ও হিজরি ক্যালেন্ডার</p>
+            </div>
+        </a>
+
+        <a href="age.html" class="menu-card">
+            <div class="icon-box"><i class="fas fa-birthday-cake"></i></div>
+            <div class="text-box">
+                <h3>বয়স ম্যানেজার</h3>
+                <p>সঠিক বয়স ও জন্মতারিখ নির্ণয়</p>
+            </div>
+        </a>
+
+        <a href="datecalc.html" class="menu-card">
+            <div class="icon-box"><i class="fas fa-history"></i></div>
+            <div class="text-box">
+                <h3>দিন গণনা</h3>
+                <p>অতীত বা ভবিষ্যতের তারিখ হিসাব</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="footer">Developed by Radius IT</div>
+</div>
+
+</body>
+</html>
